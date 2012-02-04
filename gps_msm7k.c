@@ -1081,7 +1081,7 @@ static int gps_stop() {
 
 static int gps_inject_time(GpsUtcTime time, int64_t timeReference, int uncertainty) {
 	D("%s", __func__);
-	D("time=%d, timeReference=%d, uncertainty=%d", (int) time, (int) timeReference, uncertainty);
+	D("time=%lld, timeReference=%lld, uncertainty=%d", (int) time, (int) timeReference, uncertainty);
 	GpsState*  s = _gps_state;
 	if (!s->init)
 		return 0;
