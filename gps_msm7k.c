@@ -1103,7 +1103,8 @@ static void gps_delete_aiding_data(GpsAidingData flags) {
 static int gps_set_position_mode(GpsPositionMode mode,
 	GpsPositionRecurrence recurrence, uint32_t min_interval,
 	uint32_t preferred_accuracy, uint32_t preferred_time) {
-
+	D("%s() is called", __FUNCTION__);
+	D("min_frequency=%d", min_interval);
 	scan_interval = min_interval;
 	if (scan_interval == 0) {
 		//We don't handle single shot requests atm...
