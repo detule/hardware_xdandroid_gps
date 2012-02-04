@@ -29,6 +29,13 @@
 #  define  D(...)   ((void)0)
 #endif
 
+#define RPC_DEBUG 1
+#if RPC_DEBUG
+#  define  DD(...)   LOGD(__VA_ARGS__)
+#else
+#  define  DD(...)   ((void)0)
+#endif
+
 typedef struct registered_server_struct {
 	/* MUST BE AT OFFSET ZERO!  The client code assumes this when it overwrites
 	 * the XDR for server entries which represent a callback client.  Those
@@ -120,13 +127,7 @@ static bool_t xdr_result_int(XDR *clnt, uint32_t *result) {
 	return 1;
 }
 
-static bool_t xtra_xdr_result_int(XDR *clnt, uint32_t *result) {
-    D("%s() is called", __FUNCTION__);
-    XDR_RECV_UINT32(clnt, result);
-    return 1;
-}
-
-static bool_t xtra_data_xdr_args(XDR *clnt, struct xtra_data_params *xtra_data) {
+static bool_t xdr_xtra_data_args(XDR *clnt, struct xtra_data_params *xtra_data) {
     D("%s() is called: 0x%x, %d, %d, %d", __FUNCTION__, (int) xtra_data->xtra_data_ptr, xtra_data->part_len, xtra_data->part, xtra_data->total_parts);
     uint32_t val=0;
     unsigned char *buf;
@@ -146,25 +147,35 @@ static bool_t xtra_data_xdr_args(XDR *clnt, struct xtra_data_params *xtra_data) 
     return 1;
 }
 
-static bool_t xtra_time_xdr_args(XDR *clnt, struct xtra_time_params *xtra_time) {
-    D("%s() is called: %d, %d", __FUNCTION__, (int) xtra_time->time_info_ptr->time_utc, (int) xtra_time->time_info_ptr->uncertainty);
-    uint32_t val=0;
-    uint64_t val64=0;
-    SEND_VAL(xtra_time->data[0]);
-    SEND_VAL(xtra_time->data[1]);
-    SEND_VAL(xtra_time->data[2]);
+bool_t xdr_pdsm_xtra_time_info(XDR *xdrs, pdsm_xtra_time_info_type *time_info_ptr) {
+    DD("%s() is called: %d, %d", __FUNCTION__, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty);
 
-    //SEND_VAL(xtra_time->time_info_ptr); // not works
-    // the following four lines also not work
-    SEND_VAL(xtra_time->time_info_ptr->uncertainty);
-    SEND_UINT64(xtra_time->time_info_ptr->time_utc);
-    SEND_VAL((uint32_t) xtra_time->time_info_ptr->ref_to_utc_time);
-    SEND_VAL((uint32_t) xtra_time->time_info_ptr->force_flag);
+    if (!xdr_u_quad_t(xdrs, &time_info_ptr->time_utc))
+        return 0;
+    if (!xdr_u_long(xdrs, (u_long *) &time_info_ptr->uncertainty))
+        return 0;
+    if (!xdr_u_char(xdrs, (u_char *) &time_info_ptr->ref_to_utc_time))
+        return 0;
+    if (!xdr_u_char(xdrs, (u_char *) &time_info_ptr->force_flag))
+        return 0;
 
-    D("%s() is called: #", __FUNCTION__);
     return 1;
 }
 
+static bool_t xdr_xtra_time_args(XDR *xdrs, struct xtra_time_params *xtra_time) {
+    DD("%s() is called", __FUNCTION__);
+
+    if (!xdr_u_long(xdrs, (u_long *) &xtra_time->data[0]))
+        return 0;
+    if (!xdr_u_long(xdrs, (u_long *) &xtra_time->data[1]))
+        return 0;
+    if (!xdr_u_long(xdrs, (u_long *) &xtra_time->data[2]))
+        return 0;
+    if (!xdr_pointer(xdrs, (char **) &xtra_time->time_info_ptr, sizeof(pdsm_xtra_time_info_type), (xdrproc_t) xdr_pdsm_xtra_time_info))
+        return 0;
+
+    return 1;
+}
 
 static struct timeval timeout;
 static enum {
@@ -353,10 +364,10 @@ int pdsm_xtra_set_data(struct CLIENT *clnt, int val0, int client_ID, int val2, u
     xtra_data.total_parts   = (uint32_t) total_parts;
     xtra_data.data[3]=val3;
     enum clnt_stat cs = -1;
-    cs = clnt_call(clnt, 0x1A,
-            (xdrproc_t) xtra_data_xdr_args,
+    cs = CLNT_CALL_CAST(clnt, 0x1A,
+            (xdrproc_t) xdr_xtra_data_args,
             (caddr_t) &xtra_data,
-            (xdrproc_t) xtra_xdr_result_int,
+            (xdrproc_t) xdr_result_int,
             (caddr_t) &res, timeout);
     D("%s() is called: clnt_stat=%d", __FUNCTION__, cs);
     if (cs != RPC_SUCCESS){
@@ -378,10 +389,10 @@ int pdsm_xtra_inject_time_info(struct CLIENT *clnt, int val0, int client_ID, int
     xtra_time.data[2]=val2;
     xtra_time.time_info_ptr = time_info_ptr;
     enum clnt_stat cs = -1;
-    cs = clnt_call(clnt, 0x1E,
-            (xdrproc_t) xtra_time_xdr_args,
+    cs = CLNT_CALL_CAST(clnt, 0x1E,
+            (xdrproc_t) xdr_xtra_time_args,
             (caddr_t) &xtra_time,
-            (xdrproc_t) xtra_xdr_result_int,
+            (xdrproc_t) xdr_result_int,
             (caddr_t) &res, timeout);
     D("%s() is called: clnt_stat=%d", __FUNCTION__, cs);
     if (cs != RPC_SUCCESS){
@@ -793,9 +804,7 @@ int gps_xtra_inject_time_info(GpsUtcTime time, int64_t timeReference, int uncert
     //time_info_ptr.time_utc += (int64_t)(android::elapsedRealtime() - timeReference);
     time_info_ptr.ref_to_utc_time = 1;
     time_info_ptr.force_flag = 0;
-    //FIXME: uncomment the line below when xtra_time_xdr_args() is corrected.
-    //res = pdsm_xtra_inject_time_info(_clnt, 0, client_IDs[0xb], 0, &time_info_ptr);
-    D("%s() is called: res=%d", __FUNCTION__, res);
+    res = pdsm_xtra_inject_time_info(_clnt, 0, client_IDs[0xb], 0, &time_info_ptr);
     return res;
 }
 
