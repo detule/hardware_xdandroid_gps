@@ -16,7 +16,7 @@
 #include <hardware/gps.h>
 
 #define XTRA_BLOCK_SIZE  400
-#define  GPS_DEBUG  0
+#define  GPS_DEBUG  1
 
 #if GPS_DEBUG
 #  define  D(...)   LOGD(__VA_ARGS__)
@@ -982,6 +982,7 @@ static int gps_xtra_inject_xtra_data(char* data, int length) {
 }
 
 static const GpsXtraInterface  sGpsXtraInterface = {
+    sizeof(GpsXtraInterface),
     gps_xtra_init,
     gps_xtra_inject_xtra_data,
 };
@@ -991,8 +992,8 @@ static const GpsXtraInterface  sGpsXtraInterface = {
 static void agps_init(AGpsCallbacks* callbacks) {
     D("%s() is called", __FUNCTION__);
     GpsState*  s = _gps_state;
-
     s->agps_callbacks = *callbacks;
+
 }
 
 static int agps_data_conn_open(const char* apn) {
@@ -1022,6 +1023,7 @@ static int agps_set_server(AGpsType type, const char* hostname, int port) {
 }
 
 static const AGpsInterface  sAGpsInterface = {
+    sizeof(AGpsInterface),
     agps_init,
     agps_data_conn_open,
     agps_data_conn_closed,
@@ -1038,6 +1040,7 @@ static int gps_init(GpsCallbacks* callbacks) {
 
 	if (!state->init)
 		gps_state_init(state);
+
 
 	return 0;
 }
@@ -1085,10 +1088,13 @@ static int gps_inject_time(GpsUtcTime time, int64_t timeReference, int uncertain
 	GpsState*  s = _gps_state;
 	if (!s->init)
 		return 0;
-
+	/* detule: Causes ARM9 crash on RHOD400, disable for now */
+/*
 	int ret_val = -1;
 	ret_val = gps_xtra_inject_time_info(time, timeReference, uncertainty);
 	return ret_val;
+*/
+	return 0;
 }
 
 static int gps_inject_location(double latitude, double longitude, float accuracy) {
