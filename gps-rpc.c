@@ -348,7 +348,8 @@ int pdsm_client_act(struct CLIENT *clnt, int client) {
 int pdsm_xtra_set_data(struct CLIENT *clnt, int val0, int client_ID, int val2, unsigned char *xtra_data_ptr, uint32_t part_len, uint8_t part, uint8_t total_parts, int val3) {
     struct xtra_data_params xtra_data;
     uint32_t res = -1;
-    xtra_data.data=malloc(sizeof(int)*4);
+    uint32_t par_data[3];
+    xtra_data.data=par_data;
     xtra_data.data[0]=val0;
     xtra_data.data[1]=client_ID;
     xtra_data.data[2]=val2;
@@ -358,44 +359,33 @@ int pdsm_xtra_set_data(struct CLIENT *clnt, int val0, int client_ID, int val2, u
     xtra_data.total_parts   = (uint32_t) total_parts;
     xtra_data.data[3]=val3;
     enum clnt_stat cs = -1;
-    cs = CLNT_CALL_CAST(clnt, 0x1A,
-            (xdrproc_t) xdr_xtra_data_args,
-            (caddr_t) &xtra_data,
-            (xdrproc_t) xdr_result_int,
-            (caddr_t) &res, timeout);
+    cs = CLNT_CALL_CAST(clnt, 0x1A, xdr_xtra_data_args, &xtra_data, xdr_result_int, &res, timeout);
     DD("%s() is called: clnt_stat=%d", __FUNCTION__, cs);
     if (cs != RPC_SUCCESS){
         D("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d) failed\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3);
-        free(xtra_data.data);
         exit(-1);
     }
     D("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d)=%d\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3, res);
-    free(xtra_data.data);
     return res;
 }
 
 int pdsm_xtra_inject_time_info(struct CLIENT *clnt, int val0, int client_ID, int val2, pdsm_xtra_time_info_type *time_info_ptr) {
     struct xtra_time_params xtra_time;
     uint32_t res = -1;
-    xtra_time.data=malloc(sizeof(int)*3);
+    uint32_t par_data[3];
+    xtra_time.data=par_data;
     xtra_time.data[0]=val0;
     xtra_time.data[1]=client_ID;
     xtra_time.data[2]=val2;
     xtra_time.time_info_ptr = time_info_ptr;
     enum clnt_stat cs = -1;
-    cs = CLNT_CALL_CAST(clnt, 0x1E,
-            (xdrproc_t) xdr_xtra_time_args,
-            (caddr_t) &xtra_time,
-            (xdrproc_t) xdr_result_int,
-            (caddr_t) &res, timeout);
+    cs = CLNT_CALL_CAST(clnt, 0x1E, xdr_xtra_time_args, &xtra_time, xdr_result_int, &res, timeout);
     D("%s() is called: clnt_stat=%d", __FUNCTION__, cs);
     if (cs != RPC_SUCCESS){
         D("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d) failed\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty);
-        free(xtra_time.data);
         exit(-1);
     }
     D("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d)=%d\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty, res);
-    free(xtra_time.data);
     return res;
 }
 
@@ -618,7 +608,7 @@ int pdsm_client_end_session(struct CLIENT *clnt, int id, int client) {
 	par.data[1]=0;
 	par.data[2]=0;
 	par.data[3]=client_IDs[client];
-	if(CLNT_CALL_CAST(clnt, amss==A6125 ? 0xd : 0xe, xdr_args, &par, xdr_result_int, &res, timeout)) {
+	if(CLNT_CALL_CAST(clnt, amss==A6125 ? 0xc : 0xe, xdr_args, &par, xdr_result_int, &res, timeout)) {
 		LOGV("pdsm_client_end_session(%x, 0, 0, %x) failed\n", id, client_IDs[client]);
 		exit(-1);
 	}
