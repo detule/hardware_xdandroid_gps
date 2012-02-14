@@ -348,7 +348,7 @@ int pdsm_client_act(struct CLIENT *clnt, int client) {
 int pdsm_xtra_set_data(struct CLIENT *clnt, int val0, int client_ID, int val2, unsigned char *xtra_data_ptr, uint32_t part_len, uint8_t part, uint8_t total_parts, int val3) {
     struct xtra_data_params xtra_data;
     uint32_t res = -1;
-    uint32_t par_data[3];
+    uint32_t par_data[4];
     xtra_data.data=par_data;
     xtra_data.data[0]=val0;
     xtra_data.data[1]=client_ID;
