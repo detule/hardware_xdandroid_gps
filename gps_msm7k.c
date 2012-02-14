@@ -922,8 +922,6 @@ static int gps_xtra_init(GpsXtraCallbacks* callbacks) {
 
     s->xtra_callbacks = *callbacks;
 
-    if(s->xtra_callbacks.download_request_cb)
-        s->xtra_callbacks.download_request_cb();
     return 0;
 }
 
