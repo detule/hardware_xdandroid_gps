@@ -119,7 +119,7 @@ static bool_t xdr_result_int(XDR *clnt, uint32_t *result) {
 }
 
 static bool_t xdr_xtra_data_args(XDR *xdrs, struct xtra_data_params *xtra_data) {
-    DD("%s() is called: 0x%x, %d, %d, %d", __FUNCTION__, (int) xtra_data->xtra_data_ptr, xtra_data->part_len, xtra_data->part, xtra_data->total_parts);
+    DD("%s() is called: 0x%x, %d, %d, %d, 0x%x", __FUNCTION__, (int) xtra_data->xtra_data_ptr, xtra_data->part_len, xtra_data->part, xtra_data->total_parts, xtra_data->data[3]);
 
     if (!xdr_u_long(xdrs, (u_long *) &xtra_data->data[0]))
         return 0;
@@ -142,7 +142,7 @@ static bool_t xdr_xtra_data_args(XDR *xdrs, struct xtra_data_params *xtra_data) 
 }
 
 bool_t xdr_pdsm_xtra_time_info(XDR *xdrs, pdsm_xtra_time_info_type *time_info_ptr) {
-    DD("%s() is called: %d, %d", __FUNCTION__, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty);
+    DD("%s() is called: %lld, %d", __FUNCTION__, time_info_ptr->time_utc, time_info_ptr->uncertainty);
 
     if (!xdr_u_quad_t(xdrs, &time_info_ptr->time_utc))
         return 0;
