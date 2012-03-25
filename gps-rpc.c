@@ -22,18 +22,11 @@
 #define LOGE LOGV
 #endif
 
-#define aGPS_DEBUG 1
-#if aGPS_DEBUG
-#  define  D(...)   LOGD(__VA_ARGS__)
+#define XTRA_DEBUG 1
+#if XTRA_DEBUG
+#  define  pr_dbg_xtra(...)   LOGD(__VA_ARGS__)
 #else
-#  define  D(...)   ((void)0)
-#endif
-
-#define RPC_DEBUG 1
-#if RPC_DEBUG
-#  define  DD(...)   LOGD(__VA_ARGS__)
-#else
-#  define  DD(...)   ((void)0)
+#  define  pr_dbg_xtra(...)   ((void)0)
 #endif
 
 #define  MEASUREMENT_PRECISION  10.0f // in meters
@@ -120,7 +113,7 @@ static bool_t xdr_result_int(XDR *clnt, uint32_t *result) {
 }
 
 static bool_t xdr_xtra_data_args(XDR *xdrs, struct xtra_data_params *xtra_data) {
-	DD("%s() is called: 0x%x, %d, %d, %d, 0x%x", __FUNCTION__, (int) xtra_data->xtra_data_ptr, xtra_data->part_len, xtra_data->part, xtra_data->total_parts, xtra_data->data[3]);
+	pr_dbg_xtra("%s() is called: 0x%x, %d, %d, %d, 0x%x", __FUNCTION__, (int) xtra_data->xtra_data_ptr, xtra_data->part_len, xtra_data->part, xtra_data->total_parts, xtra_data->data[3]);
 
 	if (!xdr_u_long(xdrs, (u_long *) &xtra_data->data[0]))
 		return 0;
@@ -143,7 +136,7 @@ static bool_t xdr_xtra_data_args(XDR *xdrs, struct xtra_data_params *xtra_data) 
 }
 
 bool_t xdr_pdsm_xtra_time_info(XDR *xdrs, pdsm_xtra_time_info_type *time_info_ptr) {
-	DD("%s() is called: %lld, %d", __FUNCTION__, time_info_ptr->time_utc, time_info_ptr->uncertainty);
+	pr_dbg_xtra("%s() is called: %lld, %d", __FUNCTION__, time_info_ptr->time_utc, time_info_ptr->uncertainty);
 
 	if (!xdr_u_quad_t(xdrs, &time_info_ptr->time_utc))
 		return 0;
@@ -158,7 +151,7 @@ bool_t xdr_pdsm_xtra_time_info(XDR *xdrs, pdsm_xtra_time_info_type *time_info_pt
 }
 
 static bool_t xdr_xtra_time_args(XDR *xdrs, struct xtra_time_params *xtra_time) {
-	DD("%s() is called", __FUNCTION__);
+	pr_dbg_xtra("%s() is called", __FUNCTION__);
 
 	if (!xdr_u_long(xdrs, (u_long *) &xtra_time->data[0]))
 		return 0;
@@ -361,12 +354,11 @@ int pdsm_xtra_set_data(struct CLIENT *clnt, int val0, int client_ID, int val2, u
 	xtra_data.data[3]=val3;
 	enum clnt_stat cs = -1;
 	cs = CLNT_CALL_CAST(clnt, 0x1A, xdr_xtra_data_args, &xtra_data, xdr_result_int, &res, timeout);
-	DD("%s() is called: clnt_stat=%d", __FUNCTION__, cs);
 	if (cs != RPC_SUCCESS){
-		D("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d) failed\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3);
+		pr_debug_xtra("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d) failed\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3);
 		exit(-1);
 	}
-	D("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d)=%d\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3, res);
+	pr_debug_xtra("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d)=%d, cs=%d\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3, res, cs);
 	return res;
 }
 
@@ -381,12 +373,11 @@ int pdsm_xtra_inject_time_info(struct CLIENT *clnt, int val0, int client_ID, int
 	xtra_time.time_info_ptr = time_info_ptr;
 	enum clnt_stat cs = -1;
 	cs = CLNT_CALL_CAST(clnt, 0x1E, xdr_xtra_time_args, &xtra_time, xdr_result_int, &res, timeout);
-	D("%s() is called: clnt_stat=%d", __FUNCTION__, cs);
 	if (cs != RPC_SUCCESS){
-		D("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d) failed\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty);
+		pr_debug_xtra("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d) failed\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty);
 		exit(-1);
 	}
-	D("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d)=%d\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty, res);
+	pr_debug_xtra("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d)=%d, cs=%d\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty, res, cs);
 	return res;
 }
 
