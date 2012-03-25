@@ -555,6 +555,9 @@ void dispatch_pdsm(uint32_t *data) {
 		dispatch_pdsm_pd(&(data[10]));
 	else if(procid==4)
 		dispatch_pdsm_ext(&(data[10]));
+	else if(procid==5)
+		/* XTRA Related? Don't know how to interpret. */
+		/* Introduce this as an option to calm down the LOGE print-out below. */
 	else
 		LOGE("dispatch_pdsm() received unknown procid: %d",procid);
 }
