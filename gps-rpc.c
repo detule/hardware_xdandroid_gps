@@ -354,10 +354,10 @@ int pdsm_xtra_set_data(struct CLIENT *clnt, int val0, int client_ID, int val2, u
 	enum clnt_stat cs = -1;
 	cs = CLNT_CALL_CAST(clnt, 0x1A, xdr_xtra_data_args, &xtra_data, xdr_result_int, &res, timeout);
 	if (cs != RPC_SUCCESS){
-		pr_debug_xtra("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d) failed\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3);
+		pr_dbg_xtra("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d) failed\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3);
 		exit(-1);
 	}
-	pr_debug_xtra("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d)=%d, cs=%d\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3, res, cs);
+	pr_dbg_xtra("pdsm_xtra_set_data(%x, %x, %d, 0x%x, %d, %d, %d, %d)=%d, cs=%d\n", val0, client_ID, val2, (int) xtra_data_ptr, part_len, part, total_parts, val3, res, cs);
 	return res;
 }
 
@@ -373,10 +373,10 @@ int pdsm_xtra_inject_time_info(struct CLIENT *clnt, int val0, int client_ID, int
 	enum clnt_stat cs = -1;
 	cs = CLNT_CALL_CAST(clnt, 0x1E, xdr_xtra_time_args, &xtra_time, xdr_result_int, &res, timeout);
 	if (cs != RPC_SUCCESS){
-		pr_debug_xtra("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d) failed\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty);
+		pr_dbg_xtra("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d) failed\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty);
 		exit(-1);
 	}
-	pr_debug_xtra("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d)=%d, cs=%d\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty, res, cs);
+	pr_dbg_xtra("pdsm_xtra_inject_time_info(%x, %x, %d, %d, %d)=%d, cs=%d\n", val0, client_ID, val2, (int) time_info_ptr->time_utc, (int) time_info_ptr->uncertainty, res, cs);
 	return res;
 }
 
