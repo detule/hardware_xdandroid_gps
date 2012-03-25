@@ -29,7 +29,6 @@
 #  define  pr_dbg_xtra(...)   ((void)0)
 #endif
 
-#define  MEASUREMENT_PRECISION  10.0f // in meters
 typedef struct registered_server_struct {
 	/* MUST BE AT OFFSET ZERO!  The client code assumes this when it overwrites
 	 * the XDR for server entries which represent a callback client.  Those
@@ -482,7 +481,7 @@ void dispatch_pdsm_pd(uint32_t *data) {
 
 		if (ntohl(data[75])) {
 			fix.flags |= GPS_LOCATION_HAS_ACCURACY;
-			fix.accuracy = (float)ntohl(data[75]) / 10.0f * MEASUREMENT_PRECISION;
+			fix.accuracy = (float)ntohl(data[75]) / 10.0f;
 		}
 
 		union {
